@@ -35,7 +35,7 @@
             gap: 15px;
         }
         .numeros img {
-            height: 105px; /* Seu tamanho perfeito */
+            height: 105px; /* Tamanho perfeito */
         }
     </style>
 </head>
@@ -45,8 +45,8 @@
     </div>
 
     <script>
-        const spreadsheetId = '1KVc7ozrZoeAtViL8byF8wIUAoL7co4x-iqO-qRGLY2M';
-        const apiKey = 'AIzaSyCGm86Oo_M1VyR60TILWg6j4jvCze7E0KU';  // Cole a key correta
+        const spreadsheetId = '2PACX-1vS3Udv3O-0y4yYcdjg2j8HmLlD0NJ6_Y4kkH6BW2fxdZoeeYboElezZ1NRydIQbggnbDmZAGvRZq6tR';
+        const apiKey = 'SUA_API_KEY_AQUI';  // Cole a key correta (começa com AIzaSy...)
 
         const prefixoVida = '';
         const prefixoEnergia = 'e';
@@ -57,16 +57,19 @@
             const div = document.createElement('div');
             div.className = 'numeros';
 
+            // Atual
             atual.toString().split('').forEach(d => {
                 const img = document.createElement('img');
                 img.src = `./${d.toLowerCase()}${prefixo}.png`;
                 div.appendChild(img);
             });
 
+            // Slash
             const slash = document.createElement('img');
             slash.src = `./slash${prefixo}.png`;
             div.appendChild(slash);
 
+            // Máximo
             maximo.toString().split('').forEach(d => {
                 const img = document.createElement('img');
                 img.src = `./${d.toLowerCase()}${prefixo}.png`;
@@ -85,10 +88,10 @@
             nomeDiv.textContent = row[0] || 'Jogador';
             playerDiv.appendChild(nomeDiv);
 
-            // Vida: atual (coluna C = row[2]), max (coluna B = row[1])
+            // Vida: atual (C = row[2]), max (B = row[1])
             playerDiv.appendChild(criarNumeros(row[2] || 0, row[1] || 0, prefixoVida));
 
-            // Energia: atual (coluna E = row[4]), max (coluna D = row[3])
+            // Energia: atual (E = row[4]), max (D = row[3])
             playerDiv.appendChild(criarNumeros(row[4] || 0, row[3] || 0, prefixoEnergia));
 
             return playerDiv;
