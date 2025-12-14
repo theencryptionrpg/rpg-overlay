@@ -45,31 +45,13 @@
     </div>
 
     <script>
-        const baseCsvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vS3Udv3O-0y4yYcdjg2j8HmLlD0NJ6_Y4kkH6BW2fxdZoeeYboElezZ1NRydIQbggnbDmZAGvRZq6tR/pub?output=csv';
+        // === COISAS QUE VOCÊ VAI TROCAR ===
+        const spreadsheetId = '1KVc7ozrZoeAtViL8byF8wIUAoL7co4x-iqO-qRGLY2M';  // ID da sua planilha (já correto)
+        const apiKey = '1KVc7ozrZoeAtViL8byF8wIUAoL7co4x-iqO-qRGLY2M';  // Cole a chave que você criou no Google Cloud
 
-        const prefixoVida = '';      
-        const prefixoEnergia = 'e';  
-
-        function parseCSV(csvText) {
-            const lines = csvText.trim().split('\n');
-            const players = [];
-            for (let i = 2; i < lines.length; i++) {
-                const row = lines[i].match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g) || [];
-                row.forEach((cell, idx) => {
-                    row[idx] = cell.replace(/^"|"$/g, '').trim();
-                });
-                if (row.length >= 5 && row[0]) {
-                    players.push({
-                        nome: row[0],
-                        vidaAtual: Number(row[2] || 0),
-                        vidaMax: Number(row[1] || 0),
-                        energiaAtual: Number(row[4] || 0),
-                        energiaMax: Number(row[3] || 0)
-                    });
-                }
-            }
-            return players;
-        }
+        // Prefixos dos PNGs
+        const prefixoVida = '';      // Vida: 0.png, 1.png, ..., slash.png
+        const prefixoEnergia = 'e';  // Energia: 0e.png, 1e.png, ..., slashe.png
 
         function criarNumeros(atual, maximo, prefixo) {
             const div = document.createElement('div');
@@ -77,12 +59,12 @@
 
             atual.toString().split('').forEach(d => {
                 const img = document.createElement('img');
-                img.src = `./${d.toLowerCase()}${prefixo}.png`;  // Força minúsculo
+                img.src = `./${d.toLowerCase()}${prefixo}.png`;
                 div.appendChild(img);
             });
 
             const slash = document.createElement('img');
-            slash.src = `./slash${prefixo}.png`;  // slash sempre minúsculo
+            slash.src = `./slash${prefixo}.png`;
             div.appendChild(slash);
 
             maximo.toString().split('').forEach(d => {
@@ -94,43 +76,47 @@
             return div;
         }
 
-        function criarPlayer(player) {
+        function criarPlayer(row) {
             const playerDiv = document.createElement('div');
             playerDiv.className = 'player';
 
             const nomeDiv = document.createElement('div');
             nomeDiv.className = 'nome';
-            nomeDiv.textContent = player.nome;
+            nomeDiv.textContent = row[0] || 'Jogador';
             playerDiv.appendChild(nomeDiv);
 
-            playerDiv.appendChild(criarNumeros(player.vidaAtual, player.vidaMax, prefixoVida));
+            // Vida
+            playerDiv.appendChild(criarNumeros(row[2] || 0, row[1] || 0, prefixoVida));
 
-            playerDiv.appendChild(criarNumeros(player.energiaAtual, player.energiaMax, prefixoEnergia));
+            // Energia
+            playerDiv.appendChild(criarNumeros(row[4] || 0, row[3] || 0, prefixoEnergia));
 
             return playerDiv;
         }
 
         function atualizar() {
-            const csvUrl = baseCsvUrl + '&cachebust=' + new Date().getTime();
-
-            fetch(csvUrl)
-                .then(res => res.text())
-                .then(csvText => {
-                    const players = parseCSV(csvText);
+            fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/A2:E?key=${apiKey}`)
+                .then(res => res.json())
+                .then(data => {
                     const container = document.getElementById('players-container');
                     container.innerHTML = '';
 
-                    players.forEach(p => {
-                        container.appendChild(criarPlayer(p));
-                    });
+                    if (data.values) {
+                        data.values.forEach(row => {
+                            container.appendChild(criarPlayer(row));
+                        });
+                    }
                 })
                 .catch(err => {
+                    console.error(err);
                     document.getElementById('players-container').innerHTML = 'Erro ao carregar dados';
                 });
         }
 
         atualizar();
-        setInterval(atualizar, 3000);
+        setInterval(atualizar, 3000); // Atualiza a cada 3 segundos – pode mudar pra 2000 pra mais rápido
     </script>
 </body>
 </html>
+</html>
+
