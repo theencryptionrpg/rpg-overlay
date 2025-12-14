@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { 
+            background: transparent; 
+            margin: 0; 
+            overflow: hidden; 
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 95vh;
+            gap: 20px; /* Espaço entre os jogadores */
+            padding: 20px;
+        }
+        .player {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 25px; /* Espaço entre Vida e Energia */
+        }
+        .nome {
+            color: cyan;
+            font-size: 70px;
+            text-align: center;
+            margin-bottom: 20px;
+            text-shadow: 0 0 25px cyan;
+        }
+        .numeros {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .numeros img {
+            height: 105px; /* Ajuste o tamanho aqui */
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="players-container">
+        Carregando...
+    </div>
+
+    <script>
+        const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vS3Udv3O-0y4yYcdjg2j8HmLlD0NJ6_Y4kkH6BW2fxdZoeeYboElezZ1NRydIQbggnbDmZAGvRZq6tR/pub?output=csv';
+
+        // Prefixos diferentes para Vida e Energia
+        const prefixoVida = '';      // Vida usa 0.png, 1.png, ..., slash.png
+        const prefixoEnergia = 'e';  // Energia usa 0e.png, 1e.png, ..., slashe.png
+
+        function parseCSV(csvText) {
+            const lines = csvText.trim().split('\n');
+            const players = [];
+            for (let i = 2; i < lines.length; i++) {
+                const row = lines[i].match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g) || [];
+                row.forEach((cell, idx) => {
+                    row[idx] = cell.replace(/^"|"$/g, '').trim();
+                });
+                if (row.length >= 5 && row[0]) {
+                    players.push({
+                        nome: row[0],
+                        vidaAtual: Number(row[2] || 0),
+                        vidaMax: Number(row[1] || 0),
+                        energiaAtual: Number(row[4] || 0),
+                        energiaMax: Number(row[3] || 0)
+                    });
+                }
+            }
+            return players;
+        }
+
+        function criarNumeros(atual, maximo, prefixo) {
+            const div = document.createElement('div');
+            div.className = 'numeros';
+
+            // Atual
+            atual.toString().split('').forEach(d => {
+                const img = document.createElement('img');
+                img.src = `./${d}${prefixo}.png`;
+                div.appendChild(img);
+            });
+
+            // Slash
+            const slash = document.createElement('img');
+            slash.src = `./slash${prefixo}.png`;
+            div.appendChild(slash);
+
+            // Máximo
+            maximo.toString().split('').forEach(d => {
+                const img = document.createElement('img');
+                img.src = `./${d}${prefixo}.png`;
+                div.appendChild(img);
+            });
+
+            return div;
+        }
+
+        function criarPlayer(player) {
+            const playerDiv = document.createElement('div');
+            playerDiv.className = 'player';
+
+            // Nome do jogador
+            const nomeDiv = document.createElement('div');
+            nomeDiv.className = 'nome';
+            nomeDiv.textContent = player.nome;
+            playerDiv.appendChild(nomeDiv);
+
+            // Vida (prefixo vazio)
+            playerDiv.appendChild(criarNumeros(player.vidaAtual, player.vidaMax, prefixoVida));
+
+            // Energia (prefixo 'e')
+            playerDiv.appendChild(criarNumeros(player.energiaAtual, player.energiaMax, prefixoEnergia));
+
+            return playerDiv;
+        }
+
+        function atualizar() {
+            fetch(csvUrl)
+                .then(res => res.text())
+                .then(csvText => {
+                    const players = parseCSV(csvText);
+                    const container = document.getElementById('players-container');
+                    container.innerHTML = '';
+
+                    players.forEach(p => {
+                        container.appendChild(criarPlayer(p));
+                    });
+                })
+                .catch(err => {
+                    document.getElementById('players-container').innerHTML = 'Erro ao carregar dados';
+                });
+        }
+
+        atualizar();
+        setInterval(atualizar, 3000);
+    </script>
+</body>
+</html>
