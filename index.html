@@ -35,7 +35,7 @@
             gap: 15px;
         }
         .numeros img {
-            height: 105px; /* Tamanho exato que você queria */
+            height: 105px; /* Seu tamanho perfeito */
         }
     </style>
 </head>
@@ -45,15 +45,12 @@
     </div>
 
     <script>
-        // === TROQUE AQUI ===
-        const spreadsheetId = '1KVc7ozrZoeAtViL8byF8wIUAoL7co4x-iqO-qRGLY2M'; // Seu ID correto
-        const apiKey = 'AIzaSyCGm86Oo_M1VyR60TILWg6j4jvCze7E0KU'; // Cole a API Key que você criou no Google Cloud
+        const spreadsheetId = '1KVc7ozrZoeAtViL8byF8wIUAoL7co4x-iqO-qRGLY2M';
+        const apiKey = 'AIzaSyCGm86Oo_M1VyR60TILWg6j4jvCze7E0KU';  // Cole a key correta
 
-        // Prefixos dos PNGs
-        const prefixoVida = '';      // Vida normal
-        const prefixoEnergia = 'e';  // Energia com "e"
+        const prefixoVida = '';
+        const prefixoEnergia = 'e';
 
-        // Armazena o estado anterior pra evitar oscilação
         let estadoAnterior = [];
 
         function criarNumeros(atual, maximo, prefixo) {
@@ -88,10 +85,10 @@
             nomeDiv.textContent = row[0] || 'Jogador';
             playerDiv.appendChild(nomeDiv);
 
-            // Vida
+            // Vida: atual (coluna C = row[2]), max (coluna B = row[1])
             playerDiv.appendChild(criarNumeros(row[2] || 0, row[1] || 0, prefixoVida));
 
-            // Energia
+            // Energia: atual (coluna E = row[4]), max (coluna D = row[3])
             playerDiv.appendChild(criarNumeros(row[4] || 0, row[3] || 0, prefixoEnergia));
 
             return playerDiv;
@@ -101,36 +98,38 @@
             fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/A2:E?key=${apiKey}`)
                 .then(res => res.json())
                 .then(data => {
-                    if (!data.values) return;
+                    if (!data.values || data.values.length === 0) return;
 
-                    const novoEstado = data.values.map(row => ({
-                        nome: row[0] || '',
-                        vidaAtual: Number(row[2] || 0),
-                        vidaMax: Number(row[1] || 0),
-                        energiaAtual: Number(row[4] || 0),
-                        energiaMax: Number(row[3] || 0)
-                    }));
+                    const novoEstado = data.values
+                        .filter(row => row[0] && row[0].trim() !== '')  // Ignora linhas sem nome
+                        .map(row => ({
+                            nome: row[0].trim(),
+                            vidaAtual: Number(row[2] || 0),
+                            vidaMax: Number(row[1] || 0),
+                            energiaAtual: Number(row[4] || 0),
+                            energiaMax: Number(row[3] || 0)
+                        }));
 
-                    // Só atualiza o visual se algo mudou (evita oscilação)
                     if (JSON.stringify(novoEstado) !== JSON.stringify(estadoAnterior)) {
                         const container = document.getElementById('players-container');
                         container.innerHTML = '';
 
                         data.values.forEach(row => {
-                            container.appendChild(criarPlayer(row));
+                            if (row[0] && row[0].trim() !== '') {
+                                container.appendChild(criarPlayer(row));
+                            }
                         });
 
                         estadoAnterior = novoEstado;
                     }
                 })
                 .catch(err => {
-                    console.error(err);
+                    document.getElementById('players-container').innerHTML = 'Erro ao carregar dados';
                 });
         }
 
         atualizar();
-        setInterval(atualizar, 3000); // Atualiza a cada 3 segundos
+        setInterval(atualizar, 3000);
     </script>
 </body>
 </html>
-
