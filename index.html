@@ -9,18 +9,22 @@
         }
         .container {
             display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
+            flex-direction: row;        /* Agora em linhas horizontais */
+            flex-wrap: wrap;            /* Quebra pra próxima linha quando acabar espaço */
+            justify-content: center;    /* Centraliza os jogadores */
+            align-items: flex-start;    /* Alinha no topo */
+            align-content: flex-start;  /* Alinha as linhas no topo */
             height: 95vh;
-            gap: 20px;
-            padding: 20px;
+            gap: 80px;                  /* Espaço entre os blocos (aumentei um pouco pra ficar bonito em 2 colunas) */
+            padding: 40px;
         }
         .player {
             display: flex;
             flex-direction: column;
             align-items: center;
             gap: 25px;
+            width: 45%;                 /* Cada player ocupa ~45% da largura pra caber 2 por linha */
+            max-width: 600px;
         }
         .nome {
             color: cyan;
@@ -35,7 +39,7 @@
             gap: 15px;
         }
         .numeros img {
-            height: 105px;
+            height: 105px; /* Seu tamanho perfeito */
         }
     </style>
 </head>
@@ -53,19 +57,11 @@
 
         let estadoAnterior = [];
 
-        // Função pra juntar colunas pares (ex: C e D pra vida max)
-        function juntarColunas(col1, col2) {
-            const v1 = (col1 || '').toString().trim();
-            const v2 = (col2 || '').toString().trim();
-            return Number(v1 + v2) || 0;
-        }
-
         function criarNumeros(atual, maximo, prefixo) {
             const div = document.createElement('div');
             div.className = 'numeros';
 
-            const atualNum = atual || 0;
-            atualNum.toString().split('').forEach(d => {
+            (atual || 0).toString().split('').forEach(d => {
                 const img = document.createElement('img');
                 img.src = `./${d.toLowerCase()}${prefixo}.png`;
                 div.appendChild(img);
@@ -75,8 +71,7 @@
             slash.src = `./slash${prefixo}.png`;
             div.appendChild(slash);
 
-            const maxNum = maximo || 0;
-            maxNum.toString().split('').forEach(d => {
+            (maximo || 0).toString().split('').forEach(d => {
                 const img = document.createElement('img');
                 img.src = `./${d.toLowerCase()}${prefixo}.png`;
                 div.appendChild(img);
@@ -89,43 +84,34 @@
             const playerDiv = document.createElement('div');
             playerDiv.className = 'player';
 
-            // Nome: coluna A e B (junta se tiver dois)
-            const nome = (row[0] || '') + (row[1] || '');
             const nomeDiv = document.createElement('div');
             nomeDiv.className = 'nome';
-            nomeDiv.textContent = nome.trim() || 'Jogador';
+            nomeDiv.textContent = row[0].trim() || 'Jogador';
             playerDiv.appendChild(nomeDiv);
 
-            // Vida: max (C+D), atual (E+F)
-            const vidaMax = juntarColunas(row[2], row[3]);
-            const vidaAtual = juntarColunas(row[4], row[5]);
-            playerDiv.appendChild(criarNumeros(vidaAtual, vidaMax, prefixoVida));
+            // Vida: atual (C), max (B)
+            playerDiv.appendChild(criarNumeros(Number(row[2] || 0), Number(row[1] || 0), prefixoVida));
 
-            // Energia: max (G+H), atual (I+J)
-            const energiaMax = juntarColunas(row[6], row[7]);
-            const energiaAtual = juntarColunas(row[8], row[9]);
-            playerDiv.appendChild(criarNumeros(energiaAtual, energiaMax, prefixoEnergia));
+            // Energia: atual (E), max (D)
+            playerDiv.appendChild(criarNumeros(Number(row[4] || 0), Number(row[3] || 0), prefixoEnergia));
 
             return playerDiv;
         }
 
         function atualizar() {
-            fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/A2:J?key=${apiKey}`)
+            fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/A2:E?key=${apiKey}`)
                 .then(res => res.json())
                 .then(data => {
-                    if (!data.values || data.values.length === 0) {
-                        document.getElementById('players-container').innerHTML = 'Nenhum jogador encontrado';
-                        return;
-                    }
+                    if (!data.values || data.values.length === 0) return;
 
                     const novoEstado = data.values
                         .filter(row => row[0] && row[0].trim() !== '')
                         .map(row => ({
-                            nome: (row[0] || '') + (row[1] || ''),
-                            vidaAtual: juntarColunas(row[4], row[5]),
-                            vidaMax: juntarColunas(row[2], row[3]),
-                            energiaAtual: juntarColunas(row[8], row[9]),
-                            energiaMax: juntarColunas(row[6], row[7])
+                            nome: row[0].trim(),
+                            vidaAtual: Number(row[2] || 0),
+                            vidaMax: Number(row[1] || 0),
+                            energiaAtual: Number(row[4] || 0),
+                            energiaMax: Number(row[3] || 0)
                         }));
 
                     if (JSON.stringify(novoEstado) !== JSON.stringify(estadoAnterior)) {
@@ -142,7 +128,7 @@
                     }
                 })
                 .catch(err => {
-                    document.getElementById('players-container').innerHTML = 'Erro ao carregar dados';
+                    console.error(err);
                 });
         }
 
