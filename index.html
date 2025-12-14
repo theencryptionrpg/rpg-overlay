@@ -53,24 +53,30 @@
 
         let estadoAnterior = [];
 
+        // Função pra juntar colunas pares (ex: C e D pra vida max)
+        function juntarColunas(col1, col2) {
+            const v1 = (col1 || '').toString().trim();
+            const v2 = (col2 || '').toString().trim();
+            return Number(v1 + v2) || 0;
+        }
+
         function criarNumeros(atual, maximo, prefixo) {
             const div = document.createElement('div');
             div.className = 'numeros';
 
-            // Atual
-            (atual || 0).toString().split('').forEach(d => {
+            const atualNum = atual || 0;
+            atualNum.toString().split('').forEach(d => {
                 const img = document.createElement('img');
                 img.src = `./${d.toLowerCase()}${prefixo}.png`;
                 div.appendChild(img);
             });
 
-            // Slash
             const slash = document.createElement('img');
             slash.src = `./slash${prefixo}.png`;
             div.appendChild(slash);
 
-            // Máximo
-            (maximo || 0).toString().split('').forEach(d => {
+            const maxNum = maximo || 0;
+            maxNum.toString().split('').forEach(d => {
                 const img = document.createElement('img');
                 img.src = `./${d.toLowerCase()}${prefixo}.png`;
                 div.appendChild(img);
@@ -83,22 +89,28 @@
             const playerDiv = document.createElement('div');
             playerDiv.className = 'player';
 
+            // Nome: coluna A e B (junta se tiver dois)
+            const nome = (row[0] || '') + (row[1] || '');
             const nomeDiv = document.createElement('div');
             nomeDiv.className = 'nome';
-            nomeDiv.textContent = row[0].trim() || 'Jogador';
+            nomeDiv.textContent = nome.trim() || 'Jogador';
             playerDiv.appendChild(nomeDiv);
 
-            // Vida: atual (C = row[2]), max (B = row[1])
-            playerDiv.appendChild(criarNumeros(Number(row[2] || 0), Number(row[1] || 0), prefixoVida));
+            // Vida: max (C+D), atual (E+F)
+            const vidaMax = juntarColunas(row[2], row[3]);
+            const vidaAtual = juntarColunas(row[4], row[5]);
+            playerDiv.appendChild(criarNumeros(vidaAtual, vidaMax, prefixoVida));
 
-            // Energia: atual (E = row[4]), max (D = row[3])
-            playerDiv.appendChild(criarNumeros(Number(row[4] || 0), Number(row[3] || 0), prefixoEnergia));
+            // Energia: max (G+H), atual (I+J)
+            const energiaMax = juntarColunas(row[6], row[7]);
+            const energiaAtual = juntarColunas(row[8], row[9]);
+            playerDiv.appendChild(criarNumeros(energiaAtual, energiaMax, prefixoEnergia));
 
             return playerDiv;
         }
 
         function atualizar() {
-            fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/A2:E?key=${apiKey}`)
+            fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/A2:J?key=${apiKey}`)
                 .then(res => res.json())
                 .then(data => {
                     if (!data.values || data.values.length === 0) {
@@ -107,13 +119,13 @@
                     }
 
                     const novoEstado = data.values
-                        .filter(row => row[0] && row[0].trim() !== '' && row[1] !== undefined && row[2] !== undefined)  // Linhas válidas
+                        .filter(row => row[0] && row[0].trim() !== '')
                         .map(row => ({
-                            nome: row[0].trim(),
-                            vidaAtual: Number(row[2] || 0),
-                            vidaMax: Number(row[1] || 0),
-                            energiaAtual: Number(row[4] || 0),
-                            energiaMax: Number(row[3] || 0)
+                            nome: (row[0] || '') + (row[1] || ''),
+                            vidaAtual: juntarColunas(row[4], row[5]),
+                            vidaMax: juntarColunas(row[2], row[3]),
+                            energiaAtual: juntarColunas(row[8], row[9]),
+                            energiaMax: juntarColunas(row[6], row[7])
                         }));
 
                     if (JSON.stringify(novoEstado) !== JSON.stringify(estadoAnterior)) {
@@ -121,7 +133,7 @@
                         container.innerHTML = '';
 
                         data.values.forEach(row => {
-                            if (row[0] && row[0].trim() !== '' && row[1] !== undefined && row[2] !== undefined) {
+                            if (row[0] && row[0].trim() !== '') {
                                 container.appendChild(criarPlayer(row));
                             }
                         });
