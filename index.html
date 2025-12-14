@@ -35,7 +35,7 @@
             gap: 15px;
         }
         .numeros img {
-            height: 105px; /* Seu tamanho perfeito */
+            height: 105px;
         }
     </style>
 </head>
@@ -57,19 +57,20 @@
             const div = document.createElement('div');
             div.className = 'numeros';
 
-            const atualStr = atual.toString();
-            atualStr.split('').forEach(d => {
+            // Atual
+            (atual || 0).toString().split('').forEach(d => {
                 const img = document.createElement('img');
                 img.src = `./${d.toLowerCase()}${prefixo}.png`;
                 div.appendChild(img);
             });
 
+            // Slash
             const slash = document.createElement('img');
             slash.src = `./slash${prefixo}.png`;
             div.appendChild(slash);
 
-            const maxStr = maximo.toString();
-            maxStr.split('').forEach(d => {
+            // Máximo
+            (maximo || 0).toString().split('').forEach(d => {
                 const img = document.createElement('img');
                 img.src = `./${d.toLowerCase()}${prefixo}.png`;
                 div.appendChild(img);
@@ -84,14 +85,14 @@
 
             const nomeDiv = document.createElement('div');
             nomeDiv.className = 'nome';
-            nomeDiv.textContent = row[0].trim();
+            nomeDiv.textContent = row[0].trim() || 'Jogador';
             playerDiv.appendChild(nomeDiv);
 
-            // Vida: atual (coluna C = row[2]), max (coluna B = row[1])
-            playerDiv.appendChild(criarNumeros(Number(row[2]), Number(row[1]), prefixoVida));
+            // Vida: atual (C = row[2]), max (B = row[1])
+            playerDiv.appendChild(criarNumeros(Number(row[2] || 0), Number(row[1] || 0), prefixoVida));
 
-            // Energia: atual (coluna E = row[4]), max (coluna D = row[3])
-            playerDiv.appendChild(criarNumeros(Number(row[4]), Number(row[3]), prefixoEnergia));
+            // Energia: atual (E = row[4]), max (D = row[3])
+            playerDiv.appendChild(criarNumeros(Number(row[4] || 0), Number(row[3] || 0), prefixoEnergia));
 
             return playerDiv;
         }
@@ -106,11 +107,11 @@
                     }
 
                     const novoEstado = data.values
-                        .filter(row => row.length >= 5 && row[0] && row[0].trim() !== '' && row[1] && row[2])  // Só linhas completas com nome e vida
+                        .filter(row => row[0] && row[0].trim() !== '' && row[1] !== undefined && row[2] !== undefined)  // Linhas válidas
                         .map(row => ({
                             nome: row[0].trim(),
-                            vidaAtual: Number(row[2]),
-                            vidaMax: Number(row[1]),
+                            vidaAtual: Number(row[2] || 0),
+                            vidaMax: Number(row[1] || 0),
                             energiaAtual: Number(row[4] || 0),
                             energiaMax: Number(row[3] || 0)
                         }));
@@ -120,7 +121,7 @@
                         container.innerHTML = '';
 
                         data.values.forEach(row => {
-                            if (row.length >= 5 && row[0] && row[0].trim() !== '' && row[1] && row[2]) {
+                            if (row[0] && row[0].trim() !== '' && row[1] !== undefined && row[2] !== undefined) {
                                 container.appendChild(criarPlayer(row));
                             }
                         });
