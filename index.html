@@ -2,10 +2,10 @@
 <html>
 <head>
     <style>
-        body { 
-            background: transparent; 
-            margin: 0; 
-            overflow: hidden; 
+        body {
+            background: transparent;
+            margin: 0;
+            overflow: hidden;
         }
         .container {
             display: flex;
@@ -35,7 +35,7 @@
             gap: 15px;
         }
         .numeros img {
-            height: 105px; /* Tamanho dos números */
+            height: 105px; /* Tamanho exato que você queria */
         }
     </style>
 </head>
@@ -45,13 +45,16 @@
     </div>
 
     <script>
-        // === COISAS QUE VOCÊ VAI TROCAR ===
-        const spreadsheetId = '1KVc7ozrZoeAtViL8byF8wIUAoL7co4x-iqO-qRGLY2M';  // ID da sua planilha (já correto)
-        const apiKey = '1KVc7ozrZoeAtViL8byF8wIUAoL7co4x-iqO-qRGLY2M';  // Cole a chave que você criou no Google Cloud
+        // === TROQUE AQUI ===
+        const spreadsheetId = '1KVc7ozrZoeAtViL8byF8wIUAoL7co4x-iqO-qRGLY2M'; // Seu ID correto
+        const apiKey = '1KVc7ozrZoeAtViL8byF8wIUAoL7co4x-iqO-qRGLY2M'; // Cole a API Key que você criou no Google Cloud
 
         // Prefixos dos PNGs
-        const prefixoVida = '';      // Vida: 0.png, 1.png, ..., slash.png
-        const prefixoEnergia = 'e';  // Energia: 0e.png, 1e.png, ..., slashe.png
+        const prefixoVida = '';      // Vida normal
+        const prefixoEnergia = 'e';  // Energia com "e"
+
+        // Armazena o estado anterior pra evitar oscilação
+        let estadoAnterior = [];
 
         function criarNumeros(atual, maximo, prefixo) {
             const div = document.createElement('div');
@@ -98,25 +101,35 @@
             fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/A2:E?key=${apiKey}`)
                 .then(res => res.json())
                 .then(data => {
-                    const container = document.getElementById('players-container');
-                    container.innerHTML = '';
+                    if (!data.values) return;
 
-                    if (data.values) {
+                    const novoEstado = data.values.map(row => ({
+                        nome: row[0] || '',
+                        vidaAtual: Number(row[2] || 0),
+                        vidaMax: Number(row[1] || 0),
+                        energiaAtual: Number(row[4] || 0),
+                        energiaMax: Number(row[3] || 0)
+                    }));
+
+                    // Só atualiza o visual se algo mudou (evita oscilação)
+                    if (JSON.stringify(novoEstado) !== JSON.stringify(estadoAnterior)) {
+                        const container = document.getElementById('players-container');
+                        container.innerHTML = '';
+
                         data.values.forEach(row => {
                             container.appendChild(criarPlayer(row));
                         });
+
+                        estadoAnterior = novoEstado;
                     }
                 })
                 .catch(err => {
                     console.error(err);
-                    document.getElementById('players-container').innerHTML = 'Erro ao carregar dados';
                 });
         }
 
         atualizar();
-        setInterval(atualizar, 3000); // Atualiza a cada 3 segundos – pode mudar pra 2000 pra mais rápido
+        setInterval(atualizar, 3000); // Atualiza a cada 3 segundos
     </script>
 </body>
 </html>
-</html>
-
