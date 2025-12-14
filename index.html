@@ -9,12 +9,12 @@
         }
         .container {
             display: flex;
-            flex-direction: row;        /* Jogadores lado a lado */
-            flex-wrap: wrap;            /* Quebra pra próxima linha */
-            justify-content: center;    /* Centraliza horizontalmente */
+            flex-direction: row;        /* Jogadores lado a lado (colunas) */
+            flex-wrap: wrap;            /* Quebra pra próxima linha quando acabar espaço */
+            justify-content: center;    /* Centraliza as colunas */
             align-content: flex-start;  /* Alinha as linhas no topo */
             height: 95vh;
-            gap: 80px;                  /* Espaço entre os blocos (ajuste se quiser mais/menos) */
+            gap: 100px;                 /* Espaço entre os blocos (ajuste se quiser mais/menos) */
             padding: 40px;
         }
         .player {
@@ -22,7 +22,7 @@
             flex-direction: column;
             align-items: center;
             gap: 25px;
-            width: 45%;                 /* Cada player ocupa ~45% pra caber 2 por linha */
+            width: 45%;                 /* Cada player ocupa ~45% pra caber 2 por linha (2 colunas) */
             max-width: 600px;
         }
         .nome {
@@ -38,7 +38,7 @@
             gap: 15px;
         }
         .numeros img {
-            height: 105px; /* Seu tamanho perfeito */
+            height: 105px;
         }
     </style>
 </head>
@@ -47,9 +47,8 @@
         Carregando...
     </div>
     <script>
-        // === COISAS QUE VOCÊ VAI TROCAR ===
-        const spreadsheetId = '1KVc7ozrZoeAtViL8byF8wIUAoL7co4x-iqO-qRGLY2M'; // Seu ID
-        const apiKey = 'AIzaSyCGm86Oo_M1VyR60TILWg6j4jvCze7E0KU'; // Sua key
+        const spreadsheetId = '1KVc7ozrZoeAtViL8byF8wIUAoL7co4x-iqO-qRGLY2M';
+        const apiKey = 'AIzaSyCGm86Oo_M1VyR60TILWg6j4jvCze7E0KU';
 
         const prefixoVida = '';
         const prefixoEnergia = 'e';
